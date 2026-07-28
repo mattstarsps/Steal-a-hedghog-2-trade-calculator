@@ -34,7 +34,6 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
-      padding-bottom: 90px;
     }
 
     header {
@@ -46,18 +45,46 @@
       margin-bottom: 20px;
     }
 
-    h1 { font-size: 24px; }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .language-bar {
+      background-color: #05070a;
+      border: 1px solid #1a2233;
+      border-radius: 20px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .language-bar label {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .language-bar select {
+      background: #000;
+      color: #fff;
+      border: 1px solid var(--border-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
 
     .btn-admin {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
-      color: var(--text-muted);
+      color: var(--text-main);
       padding: 8px 16px;
       border-radius: 6px;
       cursor: pointer;
       transition: 0.2s;
     }
-    .btn-admin:hover { color: var(--text-main); border-color: var(--blue-accent); }
+    .btn-admin:hover { border-color: var(--blue-accent); }
 
     .calculator-container {
       display: flex;
@@ -160,16 +187,6 @@
       text-align: center;
     }
 
-    .slot-mutation-tag {
-      font-size: 10px;
-      background: var(--purple-accent);
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-top: 4px;
-      display: inline-block;
-    }
-
     .slot-remove {
       position: absolute;
       top: 5px;
@@ -230,46 +247,9 @@
       padding: 12px;
       font-weight: bold;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
     }
 
-    /* BARRE DE LANGUE EN BAS À GAUCHE (FIXÉE) */
-    .language-bar {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background-color: #07090e;
-      border: 1px solid #1f293d;
-      border-radius: 20px;
-      padding: 6px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-    }
-
-    .language-bar span {
-      font-weight: bold;
-      font-size: 15px;
-      color: #ffffff;
-    }
-
-    .language-bar select {
-      background: #000000;
-      color: #ffffff;
-      border: 1px solid #3b4861;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-      cursor: pointer;
-      outline: none;
-    }
-
-    /* Modal / Popups */
+    /* Modals */
     .modal {
       display: none;
       position: fixed;
@@ -377,8 +357,16 @@
       cursor: pointer;
       border-radius: 6px;
     }
-    .tab-btn.active {
-      background: var(--blue-accent);
+    .tab-btn.active { background: var(--blue-accent); }
+
+    .badge-mutation {
+      display: inline-block;
+      background: var(--purple-accent);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -386,7 +374,23 @@
 
   <header>
     <h1 data-i18n="app_title">Trade Calculator</h1>
-    <button class="btn-admin" onclick="openAdminModal()" data-i18n="admin_btn">🔑 Admin</button>
+    
+    <div class="header-actions">
+      <!-- Selecteur de langue -->
+      <div class="language-bar">
+        <label for="language-select" data-i18n="language_label">Language:</label>
+        <select id="language-select" onchange="changeLanguage(this.value)">
+          <option value="en" selected>English</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="it">Italiano</option>
+          <option value="au">Australian</option>
+        </select>
+      </div>
+
+      <button class="btn-admin" onclick="openAdminModal()" data-i18n="admin_btn">🔑 Admin</button>
+    </div>
   </header>
 
   <div class="calculator-container">
@@ -422,44 +426,21 @@
     </div>
   </div>
 
-  <!-- SELECTEUR DE LANGUE EN BAS À GAUCHE -->
-  <div class="language-bar">
-    <span data-i18n="language_label">Language:</span>
-    <select id="language-select" onchange="changeLanguage(this.value)">
-      <option value="en" selected>English</option>
-      <option value="fr">Français</option>
-      <option value="es">Español</option>
-      <option value="de">Deutsch</option>
-      <option value="it">Italiano</option>
-      <option value="au">Australian</option>
-    </select>
-  </div>
-
-  <!-- Modal Choix Personnage -->
-  <div class="modal" id="select-modal">
+  <!-- Modal Étape 1 : Choix du Personnage -->
+  <div class="modal" id="select-char-modal">
     <div class="modal-content">
       <h3 class="modal-title" data-i18n="select_char_title">Select a character</h3>
       <div class="item-select-list" id="characters-list"></div>
-      <button class="btn-submit" style="margin-top: 15px; background-color: var(--border-color);" onclick="closeModal('select-modal')" data-i18n="close">Close</button>
+      <button class="btn-submit" style="margin-top: 15px; background-color: var(--border-color);" onclick="closeModal('select-char-modal')" data-i18n="close">Close</button>
     </div>
   </div>
 
-  <!-- Modal Mutation Prompt -->
-  <div class="modal" id="mutation-prompt-modal">
+  <!-- Modal Étape 2 : Choix de la Mutation -->
+  <div class="modal" id="select-mut-modal">
     <div class="modal-content">
-      <h3 class="modal-title" id="mutation-prompt-title">Does this character have a mutation?</h3>
-      
-      <div style="margin-bottom: 15px;">
-        <label><input type="radio" name="has-mutation" value="no" checked onclick="toggleMutationSelect(false)"> <span data-i18n="no">No</span></label>
-        <label style="margin-left: 15px;"><input type="radio" name="has-mutation" value="yes" onclick="toggleMutationSelect(true)"> <span data-i18n="yes">Yes</span></label>
-      </div>
-
-      <div id="mutation-select-container" style="display: none; margin-bottom: 15px;">
-        <label style="font-size: 12px; color: var(--text-muted);" data-i18n="choose_mutation">Choose mutation:</label>
-        <select id="mutation-dropdown" class="input-field" style="margin-top: 5px;"></select>
-      </div>
-
-      <button class="btn-submit" onclick="confirmCharacterSelection()" data-i18n="confirm">Confirm</button>
+      <h3 class="modal-title" data-i18n="select_mut_title">Select a Mutation</h3>
+      <div class="item-select-list" id="mutations-list"></div>
+      <button class="btn-submit" style="margin-top: 15px; background-color: var(--border-color);" onclick="closeModal('select-mut-modal')" data-i18n="close">Close</button>
     </div>
   </div>
 
@@ -501,10 +482,10 @@
       <div id="tab-muts" style="display: none;">
         <h4 style="margin-bottom: 10px;" id="mut-form-title" data-i18n="add_edit_mut">Add / Edit Mutation</h4>
         <input type="hidden" id="edit-mut-id">
-        <input type="text" id="mut-name" class="input-field" placeholder="Mutation Name (e.g. Shiny, Gold)">
-        <input type="number" id="mut-value-add" class="input-field" placeholder="Value Bonus/Malus (+100, -50...)">
-        <input type="number" id="mut-price-add" class="input-field" placeholder="Price Bonus/Malus">
-        <input type="number" id="mut-demand-add" class="input-field" placeholder="Demand Bonus/Malus">
+        <input type="text" id="mut-name" class="input-field" placeholder="Mutation Name">
+        <input type="number" id="mut-value-add" class="input-field" placeholder="Value Bonus (+100, -50...)">
+        <input type="number" id="mut-price-add" class="input-field" placeholder="Price Bonus">
+        <input type="number" id="mut-demand-add" class="input-field" placeholder="Demand Bonus">
         <button class="btn-submit" onclick="saveMutation()" data-i18n="save_mut">Save Mutation</button>
 
         <h4 style="margin: 20px 0 10px 0;" data-i18n="mut_list">Mutation List</h4>
@@ -532,11 +513,9 @@
         add_item: "Add Item",
         language_label: "Language:",
         select_char_title: "Select a character",
+        select_mut_title: "Select a Mutation",
+        no_mutation: "None (Default)",
         close: "Close",
-        no: "No",
-        yes: "Yes",
-        choose_mutation: "Choose mutation:",
-        confirm: "Confirm",
         admin_access: "Admin Access",
         submit: "Submit",
         cancel: "Cancel",
@@ -551,8 +530,7 @@
         mut_list: "Mutation List",
         fair_trade: "Fair Trade",
         win_trade: "Win Trade",
-        lose_trade: "Lose Trade",
-        has_mutation_q: "Does {name} have a mutation?"
+        lose_trade: "Lose Trade"
       },
       fr: {
         app_title: "Calculateur d'Échange",
@@ -566,11 +544,9 @@
         add_item: "Ajouter Perso",
         language_label: "Langue:",
         select_char_title: "Sélectionnez un personnage",
+        select_mut_title: "Sélectionnez une Mutation",
+        no_mutation: "Aucune (Par défaut)",
         close: "Fermer",
-        no: "Non",
-        yes: "Oui",
-        choose_mutation: "Choisir la mutation:",
-        confirm: "Valider",
         admin_access: "Accès Admin",
         submit: "Valider",
         cancel: "Annuler",
@@ -585,8 +561,7 @@
         mut_list: "Liste des Mutations",
         fair_trade: "Échange Équitable",
         win_trade: "Échange Gagnant",
-        lose_trade: "Échange Perdant",
-        has_mutation_q: "{name} a-t-il une mutation ?"
+        lose_trade: "Échange Perdant"
       },
       es: {
         app_title: "Calculadora de Intercambio",
@@ -600,11 +575,9 @@
         add_item: "Añadir Perso",
         language_label: "Idioma:",
         select_char_title: "Selecciona un personaje",
+        select_mut_title: "Selecciona una Mutación",
+        no_mutation: "Ninguna (Por defecto)",
         close: "Cerrar",
-        no: "No",
-        yes: "Sí",
-        choose_mutation: "Elegir mutación:",
-        confirm: "Confirmar",
         admin_access: "Acceso Admin",
         submit: "Enviar",
         cancel: "Cancelar",
@@ -619,8 +592,7 @@
         mut_list: "Lista de Mutaciones",
         fair_trade: "Trato Justo",
         win_trade: "Trato Ganado",
-        lose_trade: "Trato Perdido",
-        has_mutation_q: "¿Tiene {name} una mutación?"
+        lose_trade: "Trato Perdido"
       },
       de: {
         app_title: "Handelsrechner",
@@ -634,11 +606,9 @@
         add_item: "Hinzufügen",
         language_label: "Sprache:",
         select_char_title: "Wähle einen Charakter",
+        select_mut_title: "Wähle eine Mutation",
+        no_mutation: "Keine (Standard)",
         close: "Schließen",
-        no: "Nein",
-        yes: "Ja",
-        choose_mutation: "Mutation wählen:",
-        confirm: "Bestätigen",
         admin_access: "Admin-Zugang",
         submit: "Senden",
         cancel: "Abbrechen",
@@ -653,8 +623,7 @@
         mut_list: "Mutationsliste",
         fair_trade: "Fairer Handel",
         win_trade: "Gewinn-Deal",
-        lose_trade: "Verlust-Deal",
-        has_mutation_q: "Hat {name} eine Mutation?"
+        lose_trade: "Verlust-Deal"
       },
       it: {
         app_title: "Calcolatore Scambi",
@@ -668,11 +637,9 @@
         add_item: "Aggiungi",
         language_label: "Lingua:",
         select_char_title: "Seleziona personaggio",
+        select_mut_title: "Seleziona Mutazione",
+        no_mutation: "Nessuna (Predefinito)",
         close: "Chiudi",
-        no: "No",
-        yes: "Sì",
-        choose_mutation: "Scegli mutazione:",
-        confirm: "Conferma",
         admin_access: "Accesso Admin",
         submit: "Invia",
         cancel: "Annulla",
@@ -687,8 +654,7 @@
         mut_list: "Lista Mutazioni",
         fair_trade: "Scambio Equo",
         win_trade: "Scambio Vantaggioso",
-        lose_trade: "Scambio Svantaggioso",
-        has_mutation_q: "{name} ha una mutazione?"
+        lose_trade: "Scambio Svantaggioso"
       },
       au: {
         app_title: "Trade Calculator, Mate!",
@@ -702,11 +668,9 @@
         add_item: "Add Item",
         language_label: "Language:",
         select_char_title: "Pick a Legend",
+        select_mut_title: "Pick a Mutation",
+        no_mutation: "None",
         close: "Close",
-        no: "Nah",
-        yes: "Yeah",
-        choose_mutation: "Choose mutation:",
-        confirm: "Sweet",
         admin_access: "Admin Pass",
         submit: "Go",
         cancel: "Cancel",
@@ -721,8 +685,7 @@
         mut_list: "Mutation List",
         fair_trade: "Fair Dinkum Trade",
         win_trade: "Bloody Good Trade",
-        lose_trade: "Rip Off",
-        has_mutation_q: "Has {name} got a mutation?"
+        lose_trade: "Rip Off"
       }
     };
 
@@ -738,7 +701,7 @@
 
     let currentSide = null;
     let currentSlotIndex = null;
-    let tempSelectedChar = null;
+    let selectedCharTemp = null;
 
     let tradeState = {
       your: [null, null, null, null],
@@ -768,11 +731,11 @@
             slot.innerHTML = `
               <button class="slot-remove" onclick="removeItem('${side}', ${index}); event.stopPropagation();">✕</button>
               <div style="font-weight: bold; font-size: 14px;">${item.name}</div>
-              ${item.mutation ? `<span class="slot-mutation-tag">⚡ ${item.mutation.name}</span>` : ''}
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Val: ${item.effectiveValue} | $${item.effectivePrice}</div>
+              ${item.mutation ? `<div class="badge-mutation">${item.mutation}</div>` : ''}
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Val: ${item.value} | $${item.price}</div>
             `;
           } else {
-            slot.onclick = () => openSelectModal(side, index);
+            slot.onclick = () => openCharSelectModal(side, index);
             slot.innerHTML = `
               <div class="slot-add-btn">+</div>
               <div class="slot-label">${i18n[currentLang].add_item}</div>
@@ -784,7 +747,8 @@
       updateTotals();
     }
 
-    function openSelectModal(side, slotIndex) {
+    // Étape 1 : Choix du personnage
+    function openCharSelectModal(side, slotIndex) {
       currentSide = side;
       currentSlotIndex = slotIndex;
       const list = document.getElementById('characters-list');
@@ -793,7 +757,7 @@
       characters.forEach(char => {
         const itemCard = document.createElement('div');
         itemCard.className = 'item-select-card';
-        itemCard.onclick = () => openMutationPrompt(char);
+        itemCard.onclick = () => openMutationSelectModal(char);
         itemCard.innerHTML = `
           <div>
             <strong>${char.name}</strong><br>
@@ -803,53 +767,64 @@
         list.appendChild(itemCard);
       });
 
-      document.getElementById('select-modal').style.display = 'flex';
+      document.getElementById('select-char-modal').style.display = 'flex';
     }
 
-    function openMutationPrompt(char) {
-      tempSelectedChar = char;
-      closeModal('select-modal');
+    // Étape 2 : Choix de la mutation
+    function openMutationSelectModal(char) {
+      selectedCharTemp = char;
+      closeModal('select-char-modal');
 
-      const qText = i18n[currentLang].has_mutation_q.replace('{name}', char.name);
-      document.getElementById('mutation-prompt-title').innerText = qText;
-      document.querySelector('input[name="has-mutation"][value="no"]').checked = true;
-      toggleMutationSelect(false);
+      const list = document.getElementById('mutations-list');
+      list.innerHTML = '';
 
-      const dropdown = document.getElementById('mutation-dropdown');
-      dropdown.innerHTML = '';
-      mutations.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.innerText = `${m.name} (+${m.valueAdd} Val, +$${m.priceAdd})`;
-        dropdown.appendChild(opt);
+      // Option "Aucune mutation"
+      const noMutCard = document.createElement('div');
+      noMutCard.className = 'item-select-card';
+      noMutCard.onclick = () => applySelection(null);
+      noMutCard.innerHTML = `<strong>${i18n[currentLang].no_mutation}</strong>`;
+      list.appendChild(noMutCard);
+
+      // Liste des mutations enregistrées
+      mutations.forEach(mut => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-select-card';
+        itemCard.onclick = () => applySelection(mut);
+        itemCard.innerHTML = `
+          <div>
+            <strong>✨ ${mut.name}</strong><br>
+            <small style="color: var(--text-muted);">+${mut.valueAdd} Val | +$${mut.priceAdd} Price | +${mut.demandAdd} Demand</small>
+          </div>
+        `;
+        list.appendChild(itemCard);
       });
 
-      document.getElementById('mutation-prompt-modal').style.display = 'flex';
+      document.getElementById('select-mut-modal').style.display = 'flex';
     }
 
-    function toggleMutationSelect(show) {
-      document.getElementById('mutation-select-container').style.display = show ? 'block' : 'none';
-    }
+    // Validation finale de la sélection (Perso + Mutation)
+    function applySelection(mutation) {
+      let finalValue = selectedCharTemp.value;
+      let finalPrice = selectedCharTemp.price;
+      let finalDemand = selectedCharTemp.demand;
+      let mutName = null;
 
-    function confirmCharacterSelection() {
-      const hasMut = document.querySelector('input[name="has-mutation"]:checked').value === 'yes';
-      let selectedMut = null;
-
-      if (hasMut && mutations.length > 0) {
-        const mutId = parseInt(document.getElementById('mutation-dropdown').value);
-        selectedMut = mutations.find(m => m.id === mutId);
+      if (mutation) {
+        finalValue += mutation.valueAdd;
+        finalPrice += mutation.priceAdd;
+        finalDemand = Math.min(10, finalDemand + mutation.demandAdd);
+        mutName = mutation.name;
       }
 
-      const itemInstance = {
-        ...tempSelectedChar,
-        mutation: selectedMut,
-        effectiveValue: tempSelectedChar.value + (selectedMut ? selectedMut.valueAdd : 0),
-        effectivePrice: tempSelectedChar.price + (selectedMut ? selectedMut.priceAdd : 0),
-        effectiveDemand: Math.min(10, Math.max(0, tempSelectedChar.demand + (selectedMut ? selectedMut.demandAdd : 0)))
+      tradeState[currentSide][currentSlotIndex] = {
+        name: selectedCharTemp.name,
+        value: finalValue,
+        price: finalPrice,
+        demand: finalDemand,
+        mutation: mutName
       };
 
-      tradeState[currentSide][currentSlotIndex] = itemInstance;
-      closeModal('mutation-prompt-modal');
+      closeModal('select-mut-modal');
       renderSlots();
     }
 
@@ -862,9 +837,9 @@
       const calcStats = (side) => {
         return tradeState[side].reduce((acc, item) => {
           if (item) {
-            acc.value += item.effectiveValue;
-            acc.price += item.effectivePrice;
-            acc.demand += item.effectiveDemand;
+            acc.value += item.value;
+            acc.price += item.price;
+            acc.demand += item.demand;
             acc.count++;
           }
           return acc;
@@ -916,7 +891,7 @@
       renderSlots();
     }
 
-    // Admin
+    // --- ADMIN MANAGEMENT ---
     function openAdminModal() {
       document.getElementById('admin-auth-modal').style.display = 'flex';
     }
@@ -941,6 +916,7 @@
     }
 
     function renderAdminLists() {
+      // Render Characters
       const charList = document.getElementById('admin-chars-list');
       charList.innerHTML = '';
       characters.forEach(c => {
@@ -958,6 +934,7 @@
         charList.appendChild(item);
       });
 
+      // Render Mutations
       const mutList = document.getElementById('admin-muts-list');
       mutList.innerHTML = '';
       mutations.forEach(m => {
@@ -976,6 +953,7 @@
       });
     }
 
+    // Save/Edit Character
     function saveCharacter() {
       const id = document.getElementById('edit-char-id').value;
       const name = document.getElementById('new-name').value;
@@ -987,7 +965,9 @@
 
       if (id) {
         const idx = characters.findIndex(c => c.id === parseInt(id));
-        characters[idx] = { id: parseInt(id), name, value, price, demand };
+        if (idx !== -1) {
+          characters[idx] = { id: parseInt(id), name, value, price, demand };
+        }
       } else {
         characters.push({ id: Date.now(), name, value, price, demand });
       }
@@ -999,11 +979,13 @@
 
     function editChar(id) {
       const c = characters.find(item => item.id === id);
-      document.getElementById('edit-char-id').value = c.id;
-      document.getElementById('new-name').value = c.name;
-      document.getElementById('new-value').value = c.value;
-      document.getElementById('new-price').value = c.price;
-      document.getElementById('new-demand').value = c.demand;
+      if (c) {
+        document.getElementById('edit-char-id').value = c.id;
+        document.getElementById('new-name').value = c.name;
+        document.getElementById('new-value').value = c.value;
+        document.getElementById('new-price').value = c.price;
+        document.getElementById('new-demand').value = c.demand;
+      }
     }
 
     function deleteChar(id) {
@@ -1020,6 +1002,7 @@
       document.getElementById('new-demand').value = '';
     }
 
+    // Save/Edit Mutation
     function saveMutation() {
       const id = document.getElementById('edit-mut-id').value;
       const name = document.getElementById('mut-name').value;
@@ -1031,7 +1014,9 @@
 
       if (id) {
         const idx = mutations.findIndex(m => m.id === parseInt(id));
-        mutations[idx] = { id: parseInt(id), name, valueAdd, priceAdd, demandAdd };
+        if (idx !== -1) {
+          mutations[idx] = { id: parseInt(id), name, valueAdd, priceAdd, demandAdd };
+        }
       } else {
         mutations.push({ id: Date.now(), name, valueAdd, priceAdd, demandAdd });
       }
@@ -1043,11 +1028,13 @@
 
     function editMutation(id) {
       const m = mutations.find(item => item.id === id);
-      document.getElementById('edit-mut-id').value = m.id;
-      document.getElementById('mut-name').value = m.name;
-      document.getElementById('mut-value-add').value = m.valueAdd;
-      document.getElementById('mut-price-add').value = m.priceAdd;
-      document.getElementById('mut-demand-add').value = m.demandAdd;
+      if (m) {
+        document.getElementById('edit-mut-id').value = m.id;
+        document.getElementById('mut-name').value = m.name;
+        document.getElementById('mut-value-add').value = m.valueAdd;
+        document.getElementById('mut-price-add').value = m.priceAdd;
+        document.getElementById('mut-demand-add').value = m.demandAdd;
+      }
     }
 
     function deleteMutation(id) {
@@ -1068,13 +1055,8 @@
       document.getElementById(id).style.display = 'none';
     }
 
-    // Init
+    // Init English
     changeLanguage("en");
-  </script>
-</body>
-</html>
-    // Initialisation
-    renderSlots();
   </script>
 </body>
 </html>
