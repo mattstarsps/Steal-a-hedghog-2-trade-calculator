@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trade Calculator</title>
   <style>
     :root {
-      --bg-color: #121318;
+      --bg-color: #0b0e14;
       --card-bg: #1e1f26;
       --slot-bg: #282932;
       --text-main: #ffffff;
@@ -15,6 +15,7 @@
       --red-accent: #ff003b;
       --green-accent: #00e676;
       --gold-accent: #f5a623;
+      --purple-accent: #a855f7;
       --border-color: #333542;
     }
 
@@ -33,6 +34,8 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      position: relative;
+      padding-bottom: 80px; /* Espace pour le sélecteur en bas */
     }
 
     header {
@@ -57,7 +60,6 @@
     }
     .btn-admin:hover { color: var(--text-main); border-color: var(--blue-accent); }
 
-    /* Layout principal */
     .calculator-container {
       display: flex;
       gap: 20px;
@@ -80,7 +82,6 @@
       margin-bottom: 15px;
     }
 
-    /* Barres de stats */
     .stats-bar {
       background-color: #17181f;
       border-radius: 12px;
@@ -113,7 +114,6 @@
     .stat-value.gold { color: var(--gold-accent); }
     .stat-value.red { color: var(--red-accent); }
 
-    /* Slots d'items */
     .slots-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -161,10 +161,14 @@
       text-align: center;
     }
 
-    .slot-filled img {
-      max-height: 70px;
-      object-fit: contain;
-      margin-bottom: 5px;
+    .slot-mutation-tag {
+      font-size: 10px;
+      background: var(--purple-accent);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 4px;
+      display: inline-block;
     }
 
     .slot-remove {
@@ -181,7 +185,6 @@
       font-size: 12px;
     }
 
-    /* Panneau central */
     .center-panel {
       width: 240px;
       display: flex;
@@ -234,6 +237,44 @@
       gap: 8px;
     }
 
+    /* Selecteur de langue personnalisé (Bas à gauche) */
+    .language-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: #05070a;
+      border: 1px solid #1a2233;
+      border-radius: 25px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 90;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .language-label {
+      font-weight: bold;
+      font-size: 16px;
+      color: #ffffff;
+    }
+
+    .language-select {
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #333d52;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .language-select option {
+      background-color: #0d1117;
+      color: #ffffff;
+    }
+
     /* Modal / Popups */
     .modal {
       display: none;
@@ -249,8 +290,11 @@
       background-color: var(--card-bg);
       border-radius: 12px;
       padding: 20px;
-      width: 400px;
+      width: 450px;
+      max-width: 90%;
       border: 1px solid var(--border-color);
+      max-height: 85vh;
+      overflow-y: auto;
     }
 
     .modal-title { margin-bottom: 15px; font-size: 18px; }
@@ -259,7 +303,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 300px;
+      max-height: 250px;
       overflow-y: auto;
     }
 
@@ -293,97 +337,431 @@
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .btn-danger {
+      background-color: var(--red-accent);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-edit {
+      background-color: var(--gold-accent);
+      color: black;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+
+    .admin-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--slot-bg);
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      background: var(--slot-bg);
+      border: 1px solid var(--border-color);
+      color: white;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .tab-btn.active {
+      background: var(--blue-accent);
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Trade Calculator</h1>
-    <button class="btn-admin" onclick="openAdminModal()">🔑 Admin</button>
+    <h1 data-i18n="app_title">Trade Calculator</h1>
+    <button class="btn-admin" onclick="openAdminModal()" data-i18n="admin_btn">🔑 Admin</button>
   </header>
 
   <div class="calculator-container">
-    <!-- Offre 1 (Your Offer) -->
+    <!-- Your Offer -->
     <div class="side-panel">
-      <h2 class="panel-title">Your Offer</h2>
+      <h2 class="panel-title" data-i18n="your_offer">Your Offer</h2>
       <div class="stats-bar">
-        <div class="stat-item"><span class="stat-label">📈 Value</span><span id="your-value" class="stat-value blue">0</span></div>
-        <div class="stat-item"><span class="stat-label">💰 Price</span><span id="your-price" class="stat-value gold">0</span></div>
-        <div class="stat-item"><span class="stat-label">⚡ Demand</span><span id="your-demand" class="stat-value red">0/10</span></div>
+        <div class="stat-item"><span class="stat-label" data-i18n="stat_value">📈 Value</span><span id="your-value" class="stat-value blue">0</span></div>
+        <div class="stat-item"><span class="stat-label" data-i18n="stat_price">💰 Price</span><span id="your-price" class="stat-value gold">0</span></div>
+        <div class="stat-item"><span class="stat-label" data-i18n="stat_demand">⚡ Demand</span><span id="your-demand" class="stat-value red">0/10</span></div>
       </div>
       <div class="slots-grid" id="your-slots"></div>
     </div>
 
-    <!-- Panneau Central -->
+    <!-- Center Panel -->
     <div class="center-panel">
       <div class="status-box" id="status-box">
         <div class="status-icon" id="status-icon">!</div>
         <div class="status-text" id="status-text">Fair Trade</div>
       </div>
-      <button class="btn-reset" onclick="resetCalculator()">↺ Reset Calculator</button>
+      <button class="btn-reset" onclick="resetCalculator()" data-i18n="reset_btn">↺ Reset Calculator</button>
     </div>
 
-    <!-- Offre 2 (Their Offer) -->
+    <!-- Their Offer -->
     <div class="side-panel">
-      <h2 class="panel-title">Their Offer</h2>
+      <h2 class="panel-title" data-i18n="their_offer">Their Offer</h2>
       <div class="stats-bar">
-        <div class="stat-item"><span class="stat-label">📈 Value</span><span id="their-value" class="stat-value blue">0</span></div>
-        <div class="stat-item"><span class="stat-label">💰 Price</span><span id="their-price" class="stat-value gold">0</span></div>
-        <div class="stat-item"><span class="stat-label">⚡ Demand</span><span id="their-demand" class="stat-value red">0/10</span></div>
+        <div class="stat-item"><span class="stat-label" data-i18n="stat_value">📈 Value</span><span id="their-value" class="stat-value blue">0</span></div>
+        <div class="stat-item"><span class="stat-label" data-i18n="stat_price">💰 Price</span><span id="their-price" class="stat-value gold">0</span></div>
+        <div class="stat-item"><span class="stat-label" data-i18n="stat_demand">⚡ Demand</span><span id="their-demand" class="stat-value red">0/10</span></div>
       </div>
       <div class="slots-grid" id="their-slots"></div>
     </div>
   </div>
 
-  <!-- Modal Sélection de Personnage -->
+  <!-- Language Selection (Bottom Left) -->
+  <div class="language-container">
+    <span class="language-label" data-i18n="language_label">Language:</span>
+    <select id="language-select" class="language-select" onchange="changeLanguage(this.value)">
+      <option value="en" selected>English</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="de">Deutsch</option>
+      <option value="it">Italiano</option>
+      <option value="au">Australian</option>
+    </select>
+  </div>
+
+  <!-- Character Select Modal -->
   <div class="modal" id="select-modal">
     <div class="modal-content">
-      <h3 class="modal-title">Sélectionnez un personnage</h3>
+      <h3 class="modal-title" data-i18n="select_char_title">Select a character</h3>
       <div class="item-select-list" id="characters-list"></div>
-      <button class="btn-submit" style="margin-top: 15px; background-color: var(--border-color);" onclick="closeModal('select-modal')">Fermer</button>
+      <button class="btn-submit" style="margin-top: 15px; background-color: var(--border-color);" onclick="closeModal('select-modal')" data-i18n="close">Close</button>
     </div>
   </div>
 
-  <!-- Modal Admin (Mot de passe) -->
+  <!-- Mutation Prompt Modal -->
+  <div class="modal" id="mutation-prompt-modal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="mutation-prompt-title">Does this character have a mutation?</h3>
+      
+      <div style="margin-bottom: 15px;">
+        <label><input type="radio" name="has-mutation" value="no" checked onclick="toggleMutationSelect(false)"> <span data-i18n="no">No</span></label>
+        <label style="margin-left: 15px;"><input type="radio" name="has-mutation" value="yes" onclick="toggleMutationSelect(true)"> <span data-i18n="yes">Yes</span></label>
+      </div>
+
+      <div id="mutation-select-container" style="display: none; margin-bottom: 15px;">
+        <label style="font-size: 12px; color: var(--text-muted);" data-i18n="choose_mutation">Choose mutation:</label>
+        <select id="mutation-dropdown" class="input-field" style="margin-top: 5px;"></select>
+      </div>
+
+      <button class="btn-submit" onclick="confirmCharacterSelection()" data-i18n="confirm">Confirm</button>
+    </div>
+  </div>
+
+  <!-- Admin Auth Modal -->
   <div class="modal" id="admin-auth-modal">
     <div class="modal-content">
-      <h3 class="modal-title">Accès Administrateur</h3>
-      <input type="password" id="admin-pass-input" class="input-field" placeholder="Entrez le mot de passe...">
-      <button class="btn-submit" onclick="verifyPassword()">Valider</button>
+      <h3 class="modal-title" data-i18n="admin_access">Admin Access</h3>
+      <input type="password" id="admin-pass-input" class="input-field" placeholder="Enter password...">
+      <button class="btn-submit" onclick="verifyPassword()" data-i18n="submit">Submit</button>
+      <button class="btn-submit" style="background-color: var(--border-color);" onclick="closeModal('admin-auth-modal')" data-i18n="cancel">Cancel</button>
     </div>
   </div>
 
-  <!-- Modal Ajout de Personnage -->
-  <div class="modal" id="admin-add-modal">
+  <!-- Admin Panel Modal -->
+  <div class="modal" id="admin-panel-modal">
     <div class="modal-content">
-      <h3 class="modal-title">Ajouter un personnage</h3>
-      <input type="text" id="new-name" class="input-field" placeholder="Nom du personnage">
-      <input type="number" id="new-value" class="input-field" placeholder="Valeur (Value)">
-      <input type="number" id="new-price" class="input-field" placeholder="Prix (Price)">
-      <input type="number" id="new-demand" class="input-field" placeholder="Demande (0 à 10)" min="0" max="10">
-      <input type="text" id="new-image" class="input-field" placeholder="URL de l'image (Optionnel)">
-      <button class="btn-submit" onclick="saveNewCharacter()">Ajouter le personnage</button>
+      <h3 class="modal-title" data-i18n="admin_panel">Admin Panel</h3>
+      
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-chars-btn" onclick="switchTab('chars')" data-i18n="tab_chars">Characters</button>
+        <button class="tab-btn" id="tab-muts-btn" onclick="switchTab('muts')" data-i18n="tab_muts">Mutations</button>
+      </div>
+
+      <!-- Tab Chars -->
+      <div id="tab-chars">
+        <h4 style="margin-bottom: 10px;" id="char-form-title" data-i18n="add_edit_char">Add / Edit Character</h4>
+        <input type="hidden" id="edit-char-id">
+        <input type="text" id="new-name" class="input-field" placeholder="Character Name">
+        <input type="number" id="new-value" class="input-field" placeholder="Value">
+        <input type="number" id="new-price" class="input-field" placeholder="Price">
+        <input type="number" id="new-demand" class="input-field" placeholder="Demand (0 to 10)" min="0" max="10">
+        <button class="btn-submit" onclick="saveCharacter()" data-i18n="save_char">Save Character</button>
+
+        <h4 style="margin: 20px 0 10px 0;" data-i18n="char_list">Character List</h4>
+        <div id="admin-chars-list"></div>
+      </div>
+
+      <!-- Tab Mutations -->
+      <div id="tab-muts" style="display: none;">
+        <h4 style="margin-bottom: 10px;" id="mut-form-title" data-i18n="add_edit_mut">Add / Edit Mutation</h4>
+        <input type="hidden" id="edit-mut-id">
+        <input type="text" id="mut-name" class="input-field" placeholder="Mutation Name (e.g. Shiny, Gold)">
+        <input type="number" id="mut-value-add" class="input-field" placeholder="Value Bonus/Malus (+100, -50...)">
+        <input type="number" id="mut-price-add" class="input-field" placeholder="Price Bonus/Malus">
+        <input type="number" id="mut-demand-add" class="input-field" placeholder="Demand Bonus/Malus">
+        <button class="btn-submit" onclick="saveMutation()" data-i18n="save_mut">Save Mutation</button>
+
+        <h4 style="margin: 20px 0 10px 0;" data-i18n="mut_list">Mutation List</h4>
+        <div id="admin-muts-list"></div>
+      </div>
+
+      <button class="btn-submit" style="margin-top: 15px; background-color: var(--border-color);" onclick="closeModal('admin-panel-modal')" data-i18n="close">Close</button>
     </div>
   </div>
 
   <script>
-    // Mot de passe Admin par défaut
     const ADMIN_PASSWORD = "admin";
+    let currentLang = "en";
 
-    // Base de données par défaut
+    // Dictionary of translations
+    const i18n = {
+      en: {
+        app_title: "Trade Calculator",
+        admin_btn: "🔑 Admin",
+        your_offer: "Your Offer",
+        their_offer: "Their Offer",
+        stat_value: "📈 Value",
+        stat_price: "💰 Price",
+        stat_demand: "⚡ Demand",
+        reset_btn: "↺ Reset Calculator",
+        add_item: "Add Item",
+        language_label: "Language:",
+        select_char_title: "Select a character",
+        close: "Close",
+        no: "No",
+        yes: "Yes",
+        choose_mutation: "Choose mutation:",
+        confirm: "Confirm",
+        admin_access: "Admin Access",
+        submit: "Submit",
+        cancel: "Cancel",
+        admin_panel: "Admin Panel",
+        tab_chars: "Characters",
+        tab_muts: "Mutations",
+        add_edit_char: "Add / Edit Character",
+        save_char: "Save Character",
+        char_list: "Character List",
+        add_edit_mut: "Add / Edit Mutation",
+        save_mut: "Save Mutation",
+        mut_list: "Mutation List",
+        fair_trade: "Fair Trade",
+        win_trade: "Win Trade",
+        lose_trade: "Lose Trade",
+        has_mutation_q: "Does {name} have a mutation?"
+      },
+      fr: {
+        app_title: "Calculateur d'Échange",
+        admin_btn: "🔑 Admin",
+        your_offer: "Votre Offre",
+        their_offer: "Leur Offre",
+        stat_value: "📈 Valeur",
+        stat_price: "💰 Prix",
+        stat_demand: "⚡ Demande",
+        reset_btn: "↺ Réinitialiser",
+        add_item: "Ajouter Perso",
+        language_label: "Langue:",
+        select_char_title: "Sélectionnez un personnage",
+        close: "Fermer",
+        no: "Non",
+        yes: "Oui",
+        choose_mutation: "Choisir la mutation:",
+        confirm: "Valider",
+        admin_access: "Accès Admin",
+        submit: "Valider",
+        cancel: "Annuler",
+        admin_panel: "Panneau d'Administration",
+        tab_chars: "Personnages",
+        tab_muts: "Mutations",
+        add_edit_char: "Ajouter / Modifier un personnage",
+        save_char: "Sauvegarder Perso",
+        char_list: "Liste des Personnages",
+        add_edit_mut: "Ajouter / Modifier une mutation",
+        save_mut: "Sauvegarder Mutation",
+        mut_list: "Liste des Mutations",
+        fair_trade: "Échange Équitable",
+        win_trade: "Échange Gagnant",
+        lose_trade: "Échange Perdant",
+        has_mutation_q: "{name} a-t-il une mutation ?"
+      },
+      es: {
+        app_title: "Calculadora de Intercambio",
+        admin_btn: "🔑 Admin",
+        your_offer: "Tu Oferta",
+        their_offer: "Su Oferta",
+        stat_value: "📈 Valor",
+        stat_price: "💰 Precio",
+        stat_demand: "⚡ Demanda",
+        reset_btn: "↺ Reiniciar",
+        add_item: "Añadir Perso",
+        language_label: "Idioma:",
+        select_char_title: "Selecciona un personaje",
+        close: "Cerrar",
+        no: "No",
+        yes: "Sí",
+        choose_mutation: "Elegir mutación:",
+        confirm: "Confirmar",
+        admin_access: "Acceso Admin",
+        submit: "Enviar",
+        cancel: "Cancelar",
+        admin_panel: "Panel de Admin",
+        tab_chars: "Personajes",
+        tab_muts: "Mutaciones",
+        add_edit_char: "Añadir / Editar Personaje",
+        save_char: "Guardar Personaje",
+        char_list: "Lista de Personajes",
+        add_edit_mut: "Añadir / Editar Mutación",
+        save_mut: "Guardar Mutación",
+        mut_list: "Lista de Mutaciones",
+        fair_trade: "Trato Justo",
+        win_trade: "Trato Ganado",
+        lose_trade: "Trato Perdido",
+        has_mutation_q: "¿Tiene {name} una mutación?"
+      },
+      de: {
+        app_title: "Handelsrechner",
+        admin_btn: "🔑 Admin",
+        your_offer: "Dein Angebot",
+        their_offer: "Ihr Angebot",
+        stat_value: "📈 Wert",
+        stat_price: "💰 Preis",
+        stat_demand: "⚡ Nachfrage",
+        reset_btn: "↺ Zurücksetzen",
+        add_item: "Hinzufügen",
+        language_label: "Sprache:",
+        select_char_title: "Wähle einen Charakter",
+        close: "Schließen",
+        no: "Nein",
+        yes: "Ja",
+        choose_mutation: "Mutation wählen:",
+        confirm: "Bestätigen",
+        admin_access: "Admin-Zugang",
+        submit: "Senden",
+        cancel: "Abbrechen",
+        admin_panel: "Admin-Panel",
+        tab_chars: "Charaktere",
+        tab_muts: "Mutationen",
+        add_edit_char: "Charakter Hinzufügen / Bearbeiten",
+        save_char: "Speichern",
+        char_list: "Charakterliste",
+        add_edit_mut: "Mutation Hinzufügen / Bearbeiten",
+        save_mut: "Speichern",
+        mut_list: "Mutationsliste",
+        fair_trade: "Fairer Handel",
+        win_trade: "Gewinn-Deal",
+        lose_trade: "Verlust-Deal",
+        has_mutation_q: "Hat {name} eine Mutation?"
+      },
+      it: {
+        app_title: "Calcolatore Scambi",
+        admin_btn: "🔑 Admin",
+        your_offer: "La Tua Offerta",
+        their_offer: "La Loro Offerta",
+        stat_value: "📈 Valore",
+        stat_price: "💰 Prezzo",
+        stat_demand: "⚡ Domanda",
+        reset_btn: "↺ Ripristina",
+        add_item: "Aggiungi",
+        language_label: "Lingua:",
+        select_char_title: "Seleziona personaggio",
+        close: "Chiudi",
+        no: "No",
+        yes: "Sì",
+        choose_mutation: "Scegli mutazione:",
+        confirm: "Conferma",
+        admin_access: "Accesso Admin",
+        submit: "Invia",
+        cancel: "Annulla",
+        admin_panel: "Pannello Admin",
+        tab_chars: "Personaggi",
+        tab_muts: "Mutazioni",
+        add_edit_char: "Aggiungi / Modifica Personaggio",
+        save_char: "Salva Personaggio",
+        char_list: "Lista Personaggi",
+        add_edit_mut: "Aggiungi / Modifica Mutazione",
+        save_mut: "Salva Mutazione",
+        mut_list: "Lista Mutazioni",
+        fair_trade: "Scambio Equo",
+        win_trade: "Scambio Vantaggioso",
+        lose_trade: "Scambio Svantaggioso",
+        has_mutation_q: "{name} ha una mutazione?"
+      },
+      au: {
+        app_title: "Trade Calculator, Mate!",
+        admin_btn: "🔑 Admin",
+        your_offer: "Your Offer",
+        their_offer: "Their Offer",
+        stat_value: "📈 Value",
+        stat_price: "💰 Price",
+        stat_demand: "⚡ Demand",
+        reset_btn: "↺ Reset Calculator",
+        add_item: "Add Item",
+        language_label: "Language:",
+        select_char_title: "Pick a Legend",
+        close: "Close",
+        no: "Nah",
+        yes: "Yeah",
+        choose_mutation: "Choose mutation:",
+        confirm: "Sweet",
+        admin_access: "Admin Pass",
+        submit: "Go",
+        cancel: "Cancel",
+        admin_panel: "Admin Panel",
+        tab_chars: "Characters",
+        tab_muts: "Mutations",
+        add_edit_char: "Add / Edit Legend",
+        save_char: "Save Legend",
+        char_list: "Legend List",
+        add_edit_mut: "Add / Edit Mutation",
+        save_mut: "Save Mutation",
+        mut_list: "Mutation List",
+        fair_trade: "Fair Dinkum Trade",
+        win_trade: "Bloody Good Trade",
+        lose_trade: "Rip Off",
+        has_mutation_q: "Has {name} got a mutation?"
+      }
+    };
+
     let characters = JSON.parse(localStorage.getItem('trade_chars')) || [
-      { id: 1, name: "Goku", value: 500, price: 1000, demand: 8, image: "" },
-      { id: 2, name: "Naruto", value: 300, price: 600, demand: 6, image: "" }
+      { id: 1, name: "Goku", value: 500, price: 1000, demand: 8 },
+      { id: 2, name: "Naruto", value: 300, price: 600, demand: 6 }
+    ];
+
+    let mutations = JSON.parse(localStorage.getItem('trade_mutations')) || [
+      { id: 1, name: "Shiny", valueAdd: 200, priceAdd: 300, demandAdd: 2 },
+      { id: 2, name: "Rainbow", valueAdd: 500, priceAdd: 800, demandAdd: 3 }
     ];
 
     let currentSide = null;
     let currentSlotIndex = null;
+    let tempSelectedChar = null;
 
     let tradeState = {
       your: [null, null, null, null],
       their: [null, null, null, null]
     };
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.innerText = i18n[lang][key];
+        }
+      });
+      renderSlots();
+    }
 
     function renderSlots() {
       ['your', 'their'].forEach(side => {
@@ -397,13 +775,14 @@
             slot.innerHTML = `
               <button class="slot-remove" onclick="removeItem('${side}', ${index}); event.stopPropagation();">✕</button>
               <div style="font-weight: bold; font-size: 14px;">${item.name}</div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Val: ${item.value} | Prix: ${item.price}</div>
+              ${item.mutation ? `<span class="slot-mutation-tag">⚡ ${item.mutation.name}</span>` : ''}
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Val: ${item.effectiveValue} | ${i18n[currentLang].stat_price.replace('💰 ','')}: $${item.effectivePrice}</div>
             `;
           } else {
             slot.onclick = () => openSelectModal(side, index);
             slot.innerHTML = `
               <div class="slot-add-btn">+</div>
-              <div class="slot-label">Add Item</div>
+              <div class="slot-label">${i18n[currentLang].add_item}</div>
             `;
           }
           container.appendChild(slot);
@@ -421,11 +800,11 @@
       characters.forEach(char => {
         const itemCard = document.createElement('div');
         itemCard.className = 'item-select-card';
-        itemCard.onclick = () => selectCharacter(char);
+        itemCard.onclick = () => openMutationPrompt(char);
         itemCard.innerHTML = `
           <div>
             <strong>${char.name}</strong><br>
-            <small style="color: var(--text-muted);">Val: ${char.value} | Prix: $${char.price} | Demande: ${char.demand}/10</small>
+            <small style="color: var(--text-muted);">Val: ${char.value} | Price: $${char.price} | Demand: ${char.demand}/10</small>
           </div>
         `;
         list.appendChild(itemCard);
@@ -434,9 +813,50 @@
       document.getElementById('select-modal').style.display = 'flex';
     }
 
-    function selectCharacter(char) {
-      tradeState[currentSide][currentSlotIndex] = char;
+    function openMutationPrompt(char) {
+      tempSelectedChar = char;
       closeModal('select-modal');
+
+      const qText = i18n[currentLang].has_mutation_q.replace('{name}', char.name);
+      document.getElementById('mutation-prompt-title').innerText = qText;
+      document.querySelector('input[name="has-mutation"][value="no"]').checked = true;
+      toggleMutationSelect(false);
+
+      const dropdown = document.getElementById('mutation-dropdown');
+      dropdown.innerHTML = '';
+      mutations.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.innerText = `${m.name} (+${m.valueAdd} Val, +$${m.priceAdd})`;
+        dropdown.appendChild(opt);
+      });
+
+      document.getElementById('mutation-prompt-modal').style.display = 'flex';
+    }
+
+    function toggleMutationSelect(show) {
+      document.getElementById('mutation-select-container').style.display = show ? 'block' : 'none';
+    }
+
+    function confirmCharacterSelection() {
+      const hasMut = document.querySelector('input[name="has-mutation"]:checked').value === 'yes';
+      let selectedMut = null;
+
+      if (hasMut && mutations.length > 0) {
+        const mutId = parseInt(document.getElementById('mutation-dropdown').value);
+        selectedMut = mutations.find(m => m.id === mutId);
+      }
+
+      const itemInstance = {
+        ...tempSelectedChar,
+        mutation: selectedMut,
+        effectiveValue: tempSelectedChar.value + (selectedMut ? selectedMut.valueAdd : 0),
+        effectivePrice: tempSelectedChar.price + (selectedMut ? selectedMut.priceAdd : 0),
+        effectiveDemand: Math.min(10, Math.max(0, tempSelectedChar.demand + (selectedMut ? selectedMut.demandAdd : 0)))
+      };
+
+      tradeState[currentSide][currentSlotIndex] = itemInstance;
+      closeModal('mutation-prompt-modal');
       renderSlots();
     }
 
@@ -449,9 +869,9 @@
       const calcStats = (side) => {
         return tradeState[side].reduce((acc, item) => {
           if (item) {
-            acc.value += item.value;
-            acc.price += item.price;
-            acc.demand += item.demand;
+            acc.value += item.effectiveValue;
+            acc.price += item.effectivePrice;
+            acc.demand += item.effectiveDemand;
             acc.count++;
           }
           return acc;
@@ -469,7 +889,6 @@
       document.getElementById('their-price').innerText = theirStats.price;
       document.getElementById('their-demand').innerText = `${theirStats.count ? Math.round(theirStats.demand / theirStats.count) : 0}/10`;
 
-      // Détection de l'équité
       const statusBox = document.getElementById('status-box');
       const statusText = document.getElementById('status-text');
       const statusIcon = document.getElementById('status-icon');
@@ -477,22 +896,22 @@
       const diff = yourStats.value - theirStats.value;
 
       if (yourStats.value === 0 && theirStats.value === 0) {
-        statusText.innerText = "Fair Trade";
+        statusText.innerText = i18n[currentLang].fair_trade;
         statusBox.style.borderColor = "var(--gold-accent)";
         statusIcon.style.backgroundColor = "var(--gold-accent)";
         statusText.style.color = "var(--gold-accent)";
-      } else if (Math.abs(diff) <= 100) { // Marge d'équité
-        statusText.innerText = "Fair Trade";
+      } else if (Math.abs(diff) <= 100) {
+        statusText.innerText = i18n[currentLang].fair_trade;
         statusBox.style.borderColor = "var(--gold-accent)";
         statusIcon.style.backgroundColor = "var(--gold-accent)";
         statusText.style.color = "var(--gold-accent)";
       } else if (diff < -100) {
-        statusText.innerText = "Win Trade";
+        statusText.innerText = i18n[currentLang].win_trade;
         statusBox.style.borderColor = "var(--green-accent)";
         statusIcon.style.backgroundColor = "var(--green-accent)";
         statusText.style.color = "var(--green-accent)";
       } else {
-        statusText.innerText = "Lose Trade";
+        statusText.innerText = i18n[currentLang].lose_trade;
         statusBox.style.borderColor = "var(--red-accent)";
         statusIcon.style.backgroundColor = "var(--red-accent)";
         statusText.style.color = "var(--red-accent)";
@@ -500,14 +919,11 @@
     }
 
     function resetCalculator() {
-      tradeState = {
-        your: [null, null, null, null],
-        their: [null, null, null, null]
-      };
+      tradeState = { your: [null, null, null, null], their: [null, null, null, null] };
       renderSlots();
     }
 
-    // Modal Admin
+    // Admin
     function openAdminModal() {
       document.getElementById('admin-auth-modal').style.display = 'flex';
     }
@@ -517,43 +933,150 @@
       if (input === ADMIN_PASSWORD) {
         document.getElementById('admin-pass-input').value = '';
         closeModal('admin-auth-modal');
-        document.getElementById('admin-add-modal').style.display = 'flex';
+        renderAdminLists();
+        document.getElementById('admin-panel-modal').style.display = 'flex';
       } else {
-        alert("Mot de passe incorrect !");
+        alert("Incorrect Password!");
       }
     }
 
-    function saveNewCharacter() {
+    function switchTab(tab) {
+      document.getElementById('tab-chars').style.display = tab === 'chars' ? 'block' : 'none';
+      document.getElementById('tab-muts').style.display = tab === 'muts' ? 'block' : 'none';
+      document.getElementById('tab-chars-btn').className = `tab-btn ${tab === 'chars' ? 'active' : ''}`;
+      document.getElementById('tab-muts-btn').className = `tab-btn ${tab === 'muts' ? 'active' : ''}`;
+    }
+
+    function renderAdminLists() {
+      const charList = document.getElementById('admin-chars-list');
+      charList.innerHTML = '';
+      characters.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'admin-list-item';
+        item.innerHTML = `
+          <div>
+            <strong>${c.name}</strong> (Val: ${c.value}, Price: $${c.price})
+          </div>
+          <div>
+            <button class="btn-edit" onclick="editChar(${c.id})">✏️</button>
+            <button class="btn-danger" onclick="deleteChar(${c.id})">🗑️</button>
+          </div>
+        `;
+        charList.appendChild(item);
+      });
+
+      const mutList = document.getElementById('admin-muts-list');
+      mutList.innerHTML = '';
+      mutations.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'admin-list-item';
+        item.innerHTML = `
+          <div>
+            <strong>${m.name}</strong> (+${m.valueAdd} Val, +$${m.priceAdd} Price)
+          </div>
+          <div>
+            <button class="btn-edit" onclick="editMutation(${m.id})">✏️</button>
+            <button class="btn-danger" onclick="deleteMutation(${m.id})">🗑️</button>
+          </div>
+        `;
+        mutList.appendChild(item);
+      });
+    }
+
+    function saveCharacter() {
+      const id = document.getElementById('edit-char-id').value;
       const name = document.getElementById('new-name').value;
       const value = parseInt(document.getElementById('new-value').value) || 0;
       const price = parseInt(document.getElementById('new-price').value) || 0;
       const demand = parseInt(document.getElementById('new-demand').value) || 0;
 
-      if (!name) {
-        alert("Veuillez entrer un nom.");
-        return;
+      if (!name) return alert("Please enter a name.");
+
+      if (id) {
+        const idx = characters.findIndex(c => c.id === parseInt(id));
+        characters[idx] = { id: parseInt(id), name, value, price, demand };
+      } else {
+        characters.push({ id: Date.now(), name, value, price, demand });
       }
 
-      const newChar = { id: Date.now(), name, value, price, demand };
-      characters.push(newChar);
       localStorage.setItem('trade_chars', JSON.stringify(characters));
+      resetCharForm();
+      renderAdminLists();
+    }
 
-      // Réinitialisation des champs
+    function editChar(id) {
+      const c = characters.find(item => item.id === id);
+      document.getElementById('edit-char-id').value = c.id;
+      document.getElementById('new-name').value = c.name;
+      document.getElementById('new-value').value = c.value;
+      document.getElementById('new-price').value = c.price;
+      document.getElementById('new-demand').value = c.demand;
+    }
+
+    function deleteChar(id) {
+      characters = characters.filter(c => c.id !== id);
+      localStorage.setItem('trade_chars', JSON.stringify(characters));
+      renderAdminLists();
+    }
+
+    function resetCharForm() {
+      document.getElementById('edit-char-id').value = '';
       document.getElementById('new-name').value = '';
       document.getElementById('new-value').value = '';
       document.getElementById('new-price').value = '';
       document.getElementById('new-demand').value = '';
+    }
 
-      closeModal('admin-add-modal');
-      alert("Personnage ajouté avec succès !");
+    function saveMutation() {
+      const id = document.getElementById('edit-mut-id').value;
+      const name = document.getElementById('mut-name').value;
+      const valueAdd = parseInt(document.getElementById('mut-value-add').value) || 0;
+      const priceAdd = parseInt(document.getElementById('mut-price-add').value) || 0;
+      const demandAdd = parseInt(document.getElementById('mut-demand-add').value) || 0;
+
+      if (!name) return alert("Please enter a name.");
+
+      if (id) {
+        const idx = mutations.findIndex(m => m.id === parseInt(id));
+        mutations[idx] = { id: parseInt(id), name, valueAdd, priceAdd, demandAdd };
+      } else {
+        mutations.push({ id: Date.now(), name, valueAdd, priceAdd, demandAdd });
+      }
+
+      localStorage.setItem('trade_mutations', JSON.stringify(mutations));
+      resetMutationForm();
+      renderAdminLists();
+    }
+
+    function editMutation(id) {
+      const m = mutations.find(item => item.id === id);
+      document.getElementById('edit-mut-id').value = m.id;
+      document.getElementById('mut-name').value = m.name;
+      document.getElementById('mut-value-add').value = m.valueAdd;
+      document.getElementById('mut-price-add').value = m.priceAdd;
+      document.getElementById('mut-demand-add').value = m.demandAdd;
+    }
+
+    function deleteMutation(id) {
+      mutations = mutations.filter(m => m.id !== id);
+      localStorage.setItem('trade_mutations', JSON.stringify(mutations));
+      renderAdminLists();
+    }
+
+    function resetMutationForm() {
+      document.getElementById('edit-mut-id').value = '';
+      document.getElementById('mut-name').value = '';
+      document.getElementById('mut-value-add').value = '';
+      document.getElementById('mut-price-add').value = '';
+      document.getElementById('mut-demand-add').value = '';
     }
 
     function closeModal(id) {
       document.getElementById(id).style.display = 'none';
     }
 
-    // Initialisation
-    renderSlots();
+    // Init with Default Language (English)
+    changeLanguage("en");
   </script>
 </body>
 </html>
