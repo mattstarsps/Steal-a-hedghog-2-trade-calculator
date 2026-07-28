@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade Calculator</title>
+  <style>
+    :root {
+      --bg-color: #121318;
+      --card-bg: #1e1f26;
+      --slot-bg: #282932;
+      --text-main: #ffffff;
+      --text-muted: #8b8d97;
+      --blue-accent: #007bf5;
+      --red-accent: #ff003b;
+      --green-accent: #00e676;
+      --gold-accent: #f5a623;
+      --border-color: #333542;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    h1 { font-size: 24px; }
+
+    .btn-admin {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-admin:hover { color: var(--text-main); border-color: var(--blue-accent); }
+
+    /* Layout principal */
+    .calculator-container {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+      align-items: flex-start;
+    }
+
+    .side-panel {
+      flex: 1;
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .panel-title {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    /* Barres de stats */
+    .stats-bar {
+      background-color: #17181f;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .stat-value.blue { color: var(--blue-accent); }
+    .stat-value.gold { color: var(--gold-accent); }
+    .stat-value.red { color: var(--red-accent); }
+
+    /* Slots d'items */
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .slot {
+      background-color: var(--slot-bg);
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .slot:hover { border-color: var(--blue-accent); }
+
+    .slot-add-btn {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background-color: rgba(0, 123, 245, 0.15);
+      color: var(--blue-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .slot-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .slot-filled {
+      border-style: solid;
+      border-color: var(--border-color);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .slot-filled img {
+      max-height: 70px;
+      object-fit: contain;
+      margin-bottom: 5px;
+    }
+
+    .slot-remove {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: var(--red-accent);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    /* Panneau central */
+    .center-panel {
+      width: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .status-box {
+      width: 100%;
+      background-color: #1c1917;
+      border: 2px solid var(--gold-accent);
+      border-radius: 16px;
+      padding: 25px 15px;
+      text-align: center;
+    }
+
+    .status-icon {
+      width: 40px;
+      height: 40px;
+      background-color: var(--gold-accent);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0 auto 10px;
+    }
+
+    .status-text {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--gold-accent);
+    }
+
+    .btn-reset {
+      width: 100%;
+      background-color: var(--red-accent);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Modal / Popups */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      width: 400px;
+      border: 1px solid var(--border-color);
+    }
+
+    .modal-title { margin-bottom: 15px; font-size: 18px; }
+
+    .item-select-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .item-select-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--slot-bg);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .item-select-card:hover { background-color: var(--border-color); }
+
+    .input-field {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--slot-bg);
+      color: white;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 10px;
+      background-color: var(--blue-accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Trade Calculator</h1>
+    <button class="btn-admin" onclick="openAdminModal()">🔑 Admin</button>
+  </header>
+
+  <div class="calculator-container">
+    <!-- Offre 1 (Your Offer) -->
+    <div class="side-panel">
+      <h2 class="panel-title">Your Offer</h2>
+      <div class="stats-bar">
+        <div class="stat-item"><span class="stat-label">📈 Value</span><span id="your-value" class="stat-value blue">0</span></div>
+        <div class="stat-item"><span class="stat-label">💰 Price</span><span id="your-price" class="stat-value gold">0</span></div>
+        <div class="stat-item"><span class="stat-label">⚡ Demand</span><span id="your-demand" class="stat-value red">0/10</span></div>
+      </div>
+      <div class="slots-grid" id="your-slots"></div>
+    </div>
+
+    <!-- Panneau Central -->
+    <div class="center-panel">
+      <div class="status-box" id="status-box">
+        <div class="status-icon" id="status-icon">!</div>
+        <div class="status-text" id="status-text">Fair Trade</div>
+      </div>
+      <button class="btn-reset" onclick="resetCalculator()">↺ Reset Calculator</button>
+    </div>
+
+    <!-- Offre 2 (Their Offer) -->
+    <div class="side-panel">
+      <h2 class="panel-title">Their Offer</h2>
+      <div class="stats-bar">
+        <div class="stat-item"><span class="stat-label">📈 Value</span><span id="their-value" class="stat-value blue">0</span></div>
+        <div class="stat-item"><span class="stat-label">💰 Price</span><span id="their-price" class="stat-value gold">0</span></div>
+        <div class="stat-item"><span class="stat-label">⚡ Demand</span><span id="their-demand" class="stat-value red">0/10</span></div>
+      </div>
+      <div class="slots-grid" id="their-slots"></div>
+    </div>
+  </div>
+
+  <!-- Modal Sélection de Personnage -->
+  <div class="modal" id="select-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Sélectionnez un personnage</h3>
+      <div class="item-select-list" id="characters-list"></div>
+      <button class="btn-submit" style="margin-top: 15px; background-color: var(--border-color);" onclick="closeModal('select-modal')">Fermer</button>
+    </div>
+  </div>
+
+  <!-- Modal Admin (Mot de passe) -->
+  <div class="modal" id="admin-auth-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Accès Administrateur</h3>
+      <input type="password" id="admin-pass-input" class="input-field" placeholder="Entrez le mot de passe...">
+      <button class="btn-submit" onclick="verifyPassword()">Valider</button>
+    </div>
+  </div>
+
+  <!-- Modal Ajout de Personnage -->
+  <div class="modal" id="admin-add-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Ajouter un personnage</h3>
+      <input type="text" id="new-name" class="input-field" placeholder="Nom du personnage">
+      <input type="number" id="new-value" class="input-field" placeholder="Valeur (Value)">
+      <input type="number" id="new-price" class="input-field" placeholder="Prix (Price)">
+      <input type="number" id="new-demand" class="input-field" placeholder="Demande (0 à 10)" min="0" max="10">
+      <input type="text" id="new-image" class="input-field" placeholder="URL de l'image (Optionnel)">
+      <button class="btn-submit" onclick="saveNewCharacter()">Ajouter le personnage</button>
+    </div>
+  </div>
+
+  <script>
+    // Mot de passe Admin par défaut
+    const ADMIN_PASSWORD = "admin";
+
+    // Base de données par défaut
+    let characters = JSON.parse(localStorage.getItem('trade_chars')) || [
+      { id: 1, name: "Goku", value: 500, price: 1000, demand: 8, image: "" },
+      { id: 2, name: "Naruto", value: 300, price: 600, demand: 6, image: "" }
+    ];
+
+    let currentSide = null;
+    let currentSlotIndex = null;
+
+    let tradeState = {
+      your: [null, null, null, null],
+      their: [null, null, null, null]
+    };
+
+    function renderSlots() {
+      ['your', 'their'].forEach(side => {
+        const container = document.getElementById(`${side}-slots`);
+        container.innerHTML = '';
+        tradeState[side].forEach((item, index) => {
+          const slot = document.createElement('div');
+          slot.className = `slot ${item ? 'slot-filled' : ''}`;
+          
+          if (item) {
+            slot.innerHTML = `
+              <button class="slot-remove" onclick="removeItem('${side}', ${index}); event.stopPropagation();">✕</button>
+              <div style="font-weight: bold; font-size: 14px;">${item.name}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Val: ${item.value} | Prix: ${item.price}</div>
+            `;
+          } else {
+            slot.onclick = () => openSelectModal(side, index);
+            slot.innerHTML = `
+              <div class="slot-add-btn">+</div>
+              <div class="slot-label">Add Item</div>
+            `;
+          }
+          container.appendChild(slot);
+        });
+      });
+      updateTotals();
+    }
+
+    function openSelectModal(side, slotIndex) {
+      currentSide = side;
+      currentSlotIndex = slotIndex;
+      const list = document.getElementById('characters-list');
+      list.innerHTML = '';
+
+      characters.forEach(char => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-select-card';
+        itemCard.onclick = () => selectCharacter(char);
+        itemCard.innerHTML = `
+          <div>
+            <strong>${char.name}</strong><br>
+            <small style="color: var(--text-muted);">Val: ${char.value} | Prix: $${char.price} | Demande: ${char.demand}/10</small>
+          </div>
+        `;
+        list.appendChild(itemCard);
+      });
+
+      document.getElementById('select-modal').style.display = 'flex';
+    }
+
+    function selectCharacter(char) {
+      tradeState[currentSide][currentSlotIndex] = char;
+      closeModal('select-modal');
+      renderSlots();
+    }
+
+    function removeItem(side, index) {
+      tradeState[side][index] = null;
+      renderSlots();
+    }
+
+    function updateTotals() {
+      const calcStats = (side) => {
+        return tradeState[side].reduce((acc, item) => {
+          if (item) {
+            acc.value += item.value;
+            acc.price += item.price;
+            acc.demand += item.demand;
+            acc.count++;
+          }
+          return acc;
+        }, { value: 0, price: 0, demand: 0, count: 0 });
+      };
+
+      const yourStats = calcStats('your');
+      const theirStats = calcStats('their');
+
+      document.getElementById('your-value').innerText = yourStats.value;
+      document.getElementById('your-price').innerText = yourStats.price;
+      document.getElementById('your-demand').innerText = `${yourStats.count ? Math.round(yourStats.demand / yourStats.count) : 0}/10`;
+
+      document.getElementById('their-value').innerText = theirStats.value;
+      document.getElementById('their-price').innerText = theirStats.price;
+      document.getElementById('their-demand').innerText = `${theirStats.count ? Math.round(theirStats.demand / theirStats.count) : 0}/10`;
+
+      // Détection de l'équité
+      const statusBox = document.getElementById('status-box');
+      const statusText = document.getElementById('status-text');
+      const statusIcon = document.getElementById('status-icon');
+
+      const diff = yourStats.value - theirStats.value;
+
+      if (yourStats.value === 0 && theirStats.value === 0) {
+        statusText.innerText = "Fair Trade";
+        statusBox.style.borderColor = "var(--gold-accent)";
+        statusIcon.style.backgroundColor = "var(--gold-accent)";
+        statusText.style.color = "var(--gold-accent)";
+      } else if (Math.abs(diff) <= 100) { // Marge d'équité
+        statusText.innerText = "Fair Trade";
+        statusBox.style.borderColor = "var(--gold-accent)";
+        statusIcon.style.backgroundColor = "var(--gold-accent)";
+        statusText.style.color = "var(--gold-accent)";
+      } else if (diff < -100) {
+        statusText.innerText = "Win Trade";
+        statusBox.style.borderColor = "var(--green-accent)";
+        statusIcon.style.backgroundColor = "var(--green-accent)";
+        statusText.style.color = "var(--green-accent)";
+      } else {
+        statusText.innerText = "Lose Trade";
+        statusBox.style.borderColor = "var(--red-accent)";
+        statusIcon.style.backgroundColor = "var(--red-accent)";
+        statusText.style.color = "var(--red-accent)";
+      }
+    }
+
+    function resetCalculator() {
+      tradeState = {
+        your: [null, null, null, null],
+        their: [null, null, null, null]
+      };
+      renderSlots();
+    }
+
+    // Modal Admin
+    function openAdminModal() {
+      document.getElementById('admin-auth-modal').style.display = 'flex';
+    }
+
+    function verifyPassword() {
+      const input = document.getElementById('admin-pass-input').value;
+      if (input === ADMIN_PASSWORD) {
+        document.getElementById('admin-pass-input').value = '';
+        closeModal('admin-auth-modal');
+        document.getElementById('admin-add-modal').style.display = 'flex';
+      } else {
+        alert("Mot de passe incorrect !");
+      }
+    }
+
+    function saveNewCharacter() {
+      const name = document.getElementById('new-name').value;
+      const value = parseInt(document.getElementById('new-value').value) || 0;
+      const price = parseInt(document.getElementById('new-price').value) || 0;
+      const demand = parseInt(document.getElementById('new-demand').value) || 0;
+
+      if (!name) {
+        alert("Veuillez entrer un nom.");
+        return;
+      }
+
+      const newChar = { id: Date.now(), name, value, price, demand };
+      characters.push(newChar);
+      localStorage.setItem('trade_chars', JSON.stringify(characters));
+
+      // Réinitialisation des champs
+      document.getElementById('new-name').value = '';
+      document.getElementById('new-value').value = '';
+      document.getElementById('new-price').value = '';
+      document.getElementById('new-demand').value = '';
+
+      closeModal('admin-add-modal');
+      alert("Personnage ajouté avec succès !");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // Initialisation
+    renderSlots();
+  </script>
+</body>
+</html>
